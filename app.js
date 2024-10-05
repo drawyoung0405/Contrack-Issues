@@ -1,28 +1,15 @@
+const apiUrl = 'http://localhost:3000/issues'
+let issues = [];
 const issuesList = document.getElementById('issuesList');
-
-// let issues = JSON.parse(localStorage.getItem('issues') || []);
-// function saveLocalStorage(){
-//   localStorage.setItem('issues', JSON.stringify(issues));
-// } 
-let issues = [
-  {
-    id: 1,
-    title: 'Noteworthy technology acquisitions 2021',
-    description: 'Here are the biggest enterprise technology acquisitions of 2021 so far, in reverse chronological order.',
-    author: 'tony',
-    severity: 'Low',
-    status: 'new'
-  },
-  {
-    id: 2,
-    title: 'abc',
-    description: 'Hacquisitions of 2021 so far, in reverse chronological order.',
-    author: 'hoa',
-    severity: 'Medium',
-    status: 'new'
-  }
-];
-
+function getIssues() {
+  fetch(apiUrl)
+    .then(res => res.json())
+    .then(data => {
+      issues = data; 
+      renderIssues(); 
+    })
+    .catch(err => console.error('Error fetching issues:', err));
+}
 function renderIssues() {
   const issuesList = document.getElementById('issuesList');
   issuesList.innerHTML = '';
@@ -67,31 +54,57 @@ const title = document.getElementById('title').value;
 const description = document.getElementById('description').value;
   const author = document.getElementById('author').value;
   const severity = document.getElementById('severity').value;
+  const newId = issues.length > 0 ? parseInt(issues[issues.length - 1].id) + 1 : 1;
   const newIssue = {
-    // id: issues.length + 1,
+    id: newId.toString(),
     title,
     description,
     author,
     severity,
-    status: 'new'
+    status: 'Open'
   };
-  issues.push(newIssue);
-  document.getElementById('issuesForm').reset();
-  renderIssues();
+  fetch(apiUrl,{
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(newIssue)
+  }).then(()=> getIssues())
+  .catch(err=> console.log(err));
 }
 document.getElementById('issuesForm').addEventListener('submit', addIssue);
+function getIssueById(id) {
 
-// Delete issues
-function deleteIssue(id){
-issues = issues.filter(issue => issue.id !== id);
-renderIssues();
+  return fetch(`${apiUrl}/${id}`)
+    .then(res => {
+      if (!res.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return res.json();
+    })
+    .catch(err => console.error('Error fetching issue:', err));
 }
-// close issue
-function closeIssue(id){
-  const issue = issues.find(i => i.id === id);
-  if (issue) {
-    issue.status = 'Closed';
-    renderIssues();
-  }
+
+function deleteIssue(id) {
+  // const idIssue=parseInt(id)
+  console.log(typeof id)
+  fetch(`${apiUrl}/${id}`, {
+    method: 'DELETE'
+  })
+  .then(() => getIssues()) 
+  .catch(err => console.error('Error deleting issue:', err));
 }
+function closeIssue(id) {
+  const issueClose = issues.filter(issue => issue.id === id);
+  issueClose.status = 'Closed';
+  fetch(`${apiUrl}/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(issueClose[0])
+  }).then(()=> getIssues()).catch(err => console.error(err))
+}
+
+document.addEventListener('DOMContentLoaded', () => { getIssues(); });
 
