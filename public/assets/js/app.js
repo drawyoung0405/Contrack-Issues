@@ -1,6 +1,11 @@
-const apiUrl = 'http://localhost:3000/issues'
+const apiUrl = 'http://localhost:3000/issues';
+
+
+// variables
 let issues = [];
 const issuesList = document.getElementById('issuesList');
+const issuesForm = document.getElementById('issuesForm');
+
 function getIssues() {
   fetch(apiUrl)
     .then(res => res.json())
@@ -10,9 +15,10 @@ function getIssues() {
     })
     .catch(err => console.error('Error fetching issues:', err));
 }
+
 function renderIssues() {
-  const issuesList = document.getElementById('issuesList');
   issuesList.innerHTML = '';
+
   issues.forEach(issue => {
     const issueElement = document.createElement('div');
     issueElement.classList.add('w-full', 'p-6', 'bg-white', 'border', 'border-gray-200', 'rounded-lg', 'shadow');
@@ -49,12 +55,14 @@ renderIssues();
 
 // Add new issue
 function addIssue(e){
-e.preventDefault();
-const title = document.getElementById('title').value;
-const description = document.getElementById('description').value;
+  e.preventDefault();
+
+  const title = document.getElementById('title').value;
+  const description = document.getElementById('description').value;
   const author = document.getElementById('author').value;
   const severity = document.getElementById('severity').value;
   const newId = issues.length > 0 ? parseInt(issues[issues.length - 1].id) + 1 : 1;
+
   const newIssue = {
     id: newId.toString(),
     title,
@@ -63,37 +71,41 @@ const description = document.getElementById('description').value;
     severity,
     status: 'Open'
   };
+
   fetch(apiUrl,{
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(newIssue)
-  }).then(()=> getIssues())
+  })
+  .then(()=> getIssues())
   .catch(err=> console.log(err));
 }
-document.getElementById('issuesForm').addEventListener('submit', addIssue);
-function getIssueById(id) {
 
-  return fetch(`${apiUrl}/${id}`)
-    .then(res => {
-      if (!res.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return res.json();
-    })
-    .catch(err => console.error('Error fetching issue:', err));
-}
+issuesForm.addEventListener('submit', addIssue);
+
+// function getIssueById(id) {
+
+//   return fetch(`${apiUrl}/${id}`)
+//     .then(res => {
+//       if (!res.ok) {
+//         throw new Error('Network response was not ok');
+//       }
+//       return res.json();
+//     })
+//     .catch(err => console.error('Error fetching issue:', err));
+// }
 
 function deleteIssue(id) {
   // const idIssue=parseInt(id)
-  console.log(typeof id)
   fetch(`${apiUrl}/${id}`, {
     method: 'DELETE'
   })
   .then(() => getIssues()) 
   .catch(err => console.error('Error deleting issue:', err));
 }
+
 function closeIssue(id) {
   const issueClose = issues.filter(issue => issue.id === id);
   issueClose.status = 'Closed';
@@ -103,7 +115,9 @@ function closeIssue(id) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(issueClose[0])
-  }).then(()=> getIssues()).catch(err => console.error(err))
+  })
+  .then(()=> getIssues())
+  .catch(err => console.error(err))
 }
 
 document.addEventListener('DOMContentLoaded', () => { getIssues(); });
